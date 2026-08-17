@@ -90,7 +90,7 @@
   .open-empty { padding:14px 10px; color:#a9b0bd; font-size:13px; }
   .fill-title { margin-top:12px; font-size:12px; color:#8a919f; font-weight:600; }
   .rating-card { border-top:3px solid #165dff; }
-  .rating-avg { font-size:13px; color:#4e5969; margin-bottom:8px; }
+  .dist-card { border-top:3px solid #7c4dff; }  .rating-avg { font-size:13px; color:#4e5969; margin-bottom:8px; }
   .rating-avg b { font-size:22px; color:#165dff; vertical-align:-2px; }
   .rating-avg span { color:#a9b0bd; font-size:12px; }
 
@@ -256,6 +256,51 @@ function renderCards(){
   box.innerHTML = "";
   RIDX = [];   // 重置详情引用表
   if (!recs.length){ box.appendChild(el("div","empty","当前筛选条件下没有样本")); return; }
+
+  // ===== 样本画像分布（身份/年级/水平/城市等级），跟随筛选 =====
+  function distCard(title, pairs){
+    const denom = pairs.reduce((a,p)=>a+p[1],0);
+    if (!denom) return null;
+    const cnts = pairs.map(p=>p[1]);
+    const order = cnts.map((c,i)=>[c,i]).sort((a,b)=>b[0]-a[0]);
+    const rankOf = {};
+    for (let k=0;k<Math.min(3,order.length);k++){ if(order[k][0]>0) rankOf[order[k][1]]=k; }
+    const maxc = Math.max(...cnts)||1;
+    const card = el("div","card dist-card");
+    card.appendChild(el("div","qtitle", title));
+    card.appendChild(el("div","qmeta", "有效样本："+denom+" 人"));
+    const table = el("table");
+    table.innerHTML = "<tr><th class='col-opt'>选项</th><th class='col-cnt'>计数</th><th class='col-pct'>占比</th><th class='col-bar'></th></tr>";
+    pairs.forEach((p,i)=>{
+      const c=p[1], pct=c/denom;
+      const tr=el("tr",(i in rankOf)?"hl":"");
+      tr.appendChild(el("td","col-opt", p[0]));
+      tr.appendChild(el("td","col-cnt", String(c)));
+      tr.appendChild(el("td","col-pct",(pct*100).toFixed(1)+"%"));
+      const td4=el("td","col-bar");
+      const b=el("div","bar "+((i in rankOf)?COLORS[rankOf[i]]:"r0")); b.style.width=Math.max(2,c/maxc*100)+"%"; td4.appendChild(b);
+      tr.appendChild(td4); table.appendChild(tr);
+    });
+    card.appendChild(table);
+    return card;
+  }
+  const codeDist = (field, map)=>{
+    const cnt={};
+    recs.forEach(r=>{ const v=r.f[field]; if(v!=="" && v!=null){ cnt[v]=(cnt[v]||0)+1; } });
+    return Object.keys(map).map(k=>[map[k], cnt[k]||0]);
+  };
+  const tierDist = ()=>{
+    const cnt={};
+    recs.forEach(r=>{ const i=r.f[5]; if(i>=0){ cnt[i]=(cnt[i]||0)+1; } });
+    return t.tier.map((lb,i)=>[lb, cnt[i]||0]);
+  };
+  const psep = el("div","open-sep");
+  psep.innerHTML = "<b>📊 样本画像分布</b><span>当前筛选人群的构成 · 可与筛选联动看子人群画像</span>";
+  box.appendChild(psep);
+  [ distCard("身份（Q1）", codeDist(0, t.q1map)),
+    distCard("年级（Q2）", codeDist(1, t.q2map)),
+    distCard("学习水平（Q3）", codeDist(2, t.q3map)),
+    distCard("城市等级", tierDist()) ].forEach(c=>{ if(c) box.appendChild(c); });
 
   // ===== 视频满意度评分（置顶展示，跟随筛选） =====
   const SCORE_LB = {5:"非常满意",4:"满意",3:"一般",2:"不满意",1:"非常不满意"};
