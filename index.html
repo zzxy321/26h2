@@ -103,15 +103,27 @@
   .uid-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:65; display:none; }
   .uid-modal-bg.show { display:block; }
   .uid-modal { position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:66; display:none;
-               width:min(560px,92vw); max-height:82vh; background:#fff; border-radius:12px; box-shadow:0 16px 48px rgba(0,0,0,.28);
+               width:min(980px,95vw); max-height:86vh; background:#fff; border-radius:12px; box-shadow:0 16px 48px rgba(0,0,0,.28);
                flex-direction:column; overflow:hidden; }
   .uid-modal.show { display:flex; }
   .uid-modal-head { display:flex; align-items:center; padding:14px 16px; border-bottom:1px solid #f0f0f0; }
   .uid-modal-head b { font-size:15px; }
   .uid-close { margin-left:auto; border:none; background:#f2f3f5; border-radius:6px; width:26px; height:26px; cursor:pointer; color:#4e5969; font-size:14px; }
   .uid-modal-body { padding:14px 16px; overflow-y:auto; }
-  .uid-block { margin-bottom:16px; }
-  .uid-block-tab { display:inline-block; font-size:12px; color:#fff; background:#165dff; border-radius:5px; padding:2px 10px; margin-bottom:8px; }  .rating-avg { font-size:13px; color:#4e5969; margin-bottom:8px; }
+  .uid-block { margin-bottom:18px; }
+  .uid-block-tab { display:inline-block; font-size:12px; color:#fff; background:#165dff; border-radius:5px; padding:2px 10px; margin-bottom:8px; }
+  .uid-cols { display:flex; gap:16px; align-items:flex-start; }
+  .uid-left { flex:0 0 290px; }
+  .uid-right { flex:1; min-width:0; border-left:1px solid #f0f0f0; padding-left:16px; }
+  @media (max-width:760px){ .uid-cols{ flex-direction:column; } .uid-left{ flex:none; width:100%; } .uid-right{ border-left:none; padding-left:0; border-top:1px solid #f0f0f0; padding-top:12px; } }
+  .uid-right-title { font-size:14px; font-weight:700; color:#1f2329; margin-bottom:8px; }
+  .iv-sec { font-weight:700; color:#7c4dff; font-size:13px; margin:12px 0 4px; }
+  .iv-sec:first-child { margin-top:0; }
+  .iv-q { font-size:13px; line-height:1.6; color:#1f2329; margin:6px 0 2px; }
+  .iv-p { font-size:12.5px; line-height:1.6; color:#4e5969; padding-left:12px; position:relative; margin:2px 0; }
+  .iv-p::before { content:"·"; position:absolute; left:2px; color:#c0c4cc; }
+  .iv-note { font-size:12px; line-height:1.5; color:#00916b; background:#eefaf4; border-radius:6px; padding:6px 10px; margin:4px 0; }
+  .iv-hl { color:#e8342a; font-weight:600; }  .rating-avg { font-size:13px; color:#4e5969; margin-bottom:8px; }
   .rating-avg b { font-size:22px; color:#165dff; vertical-align:-2px; }
   .rating-avg span { color:#a9b0bd; font-size:12px; }
 
@@ -546,6 +558,155 @@ window.addEventListener("scroll", ()=>{ if(panelOpen) positionPanel(); });
 
 // ===== 按 UID 查询用户作答 =====
 TABS.forEach(t=>{ const mp={}; t.records.forEach(r=>{ if(r.u) mp[r.u]=r; }); t.uidMap = mp; });
+
+// ---- 推荐访谈问题生成 ----
+function ivFindQ(t, kws){ for(let i=0;i<t.questions.length;i++){ const ti=t.questions[i].title; if(kws.some(k=>ti.indexOf(k)>=0)) return i; } return -1; }
+function ivFindQs(t, kws){ const r=[]; t.questions.forEach((q,i)=>{ if(kws.some(k=>q.title.indexOf(k)>=0)) r.push(i); }); return r; }
+function ivSel(t, rec, qi){ const out=[]; if(qi<0) return out; (rec.s||[]).forEach(s=>{ if(s[0]===qi) out.push(t.questions[qi].options[s[1]]); }); return out; }
+function ivRating(rec){ return (rec.rt&&rec.rt.length)? rec.rt[0][1] : null; }
+function escList(a){ return a.map(esc).join("、"); }
+const IV_PROBES=[
+  ["不是我拍的题目","搜出来的视频常跟你拍的题对不上——回忆一次具体情况?多久碰到一回?当时怎么办的(换App/看文字/放弃)?"],
+  ["视频讲解有误","「讲解有误」你一般怎么发现的?错在答案、步骤还是概念上?"],
+  ["板书潦草","「板书潦草」是字看不清,还是步骤跳、跟不上?哪种题最明显?"],
+  ["老师有口音","口音影响你听懂了吗?是个别字听不清,还是整体听着费劲?"],
+  ["解法超纲","是用了你还没学的方法,还是绕远了?更想要贴合当前进度的解法吗?"],
+  ["声音小","是普遍都小还是个别视频?一般什么环境看(外放/耳机)?"],
+  ["思路不清晰","是没讲『为什么这么做』,还是步骤之间跳太快?"],
+  ["念答案无分析","最想补上的是哪部分——为什么这么想,还是易错点?"],
+  ["枯燥","「枯燥」是老师语气平、一个调,还是题本身没意思?你是不想点开,还是看一半走神?你理想中『不无聊又不浪费时间』的讲解啥样?有没有在别处看过觉得带劲的例子?"],
+  ["画面不好看","是单纯朴素提不起劲,还是有些过程静态板书看不懂、得动起来才明白?哪类内容最需要动图(几何/函数/物理过程/化学实验)?动图更重要的是好懂还是好看?"],
+  ["不能互动","你要的互动是卡住能追问,还是过程中被提问、有反馈?最近一次卡住最希望它干嘛?追问想要什么形式回应(文字/语音/再讲一遍)?AI来答你接受吗?"],
+  ["搜不到","是搜到题但没视频,还是搜不到这道题?经常搜不到什么题/学科?多久一次?当时怎么办?"],
+  ["延伸不够","你要的延伸是课本同类题变式,还是更高阶拓展?主要为了应对考试举一反三吗?放视频里讲,还是做成『相关知识点/同类题』入口更好?"],
+  ["解题方法单一","是只给一种解法/太老套,还是缺考试常用的快捷方法?哪类题最想看多解法或更优解?想『一题多解都讲』还是『先给最优最快那种』?"],
+  ["不喜欢看AI","不喜欢的是AI的声音、讲得不准还是板书?你怎么判断一条是AI讲的?如果AI能保证准确、贴题、还能追问,你接受吗?"],
+  ["动画讲解","什么题最需要动画(过程类/抽象类)?什么题其实不用?你要动画是为看懂过程,还是好看愿意看下去?"],
+  ["追问","是哪一步经常卡、光看视频解决不了才需要追问?现在卡住一般怎么办?希望随时问都答,还是针对这道题这一步?要文字/语音/再讲一遍?多久回应算合格?"],
+  ["卡通","想要卡通音色是因为口音问题吗?希望什么风格/哪个人物的声音?"],
+  ["动态板书","你希望板书/图形用什么动态效果呈现?能描述理想的样子吗?哪类题(实验/几何/函数)最需要?"],
+  ["回答老师的提问","如果视频里加师生互动问答,你希望什么形式?觉得能帮你集中注意力、抓住重点吗?"],
+  ["AI实时生成","你更在意『总能有个讲解』还是『讲得准』?如果AI偶尔不准,你还会因为『至少不空着』愿意付费吗?"],
+  ["压轴","难题精讲你是为平时刷到的难题,还是冲刺/拔高/竞赛?希望讲到什么程度?"],
+  ["错题","现在错题怎么管理和复习(拍照/错题本/不管)?组卷想按什么组(学科/知识点/错因/难度)?做完最需要啥(自动判分/错因讲解/配同类题)?"],
+  ["实时字幕","要字幕是因为口音/声音小/环境不便,还是想边看边定位某步、照着记笔记?AI字幕偶尔有错能接受吗?要逐字,还是关键步骤公式高亮、点字幕跳转?"],
+  ["视频玩法","点赞/投币/收藏/转发分别啥场景用?收藏是为复习?转发发给同学还是家长?"],
+  ["弹幕","学习时什么情况愿意开弹幕?是有共鸣有帮助,还是纯粹挡视线?"],
+  ["更简单的语言","现在讲得『不够简单』卡在哪(术语多/句子长/语速快/概念跳太快)?能举一句没听懂的话吗?"],
+  ["图形/动画演示","图形动画主要帮孩子『看懂过程』还是『愿意看下去不走神』?哪类小学题最需要?"],
+  ["少讲公式","是套公式会做但不懂,还是公式记不住?希望先讲清『为什么』再给公式吗?"],
+  ["一步一步慢","『慢』是语速慢,还是步骤别跳、每步说清为什么?现在最容易在哪步一带而过?"],
+  ["同类巩固题","孩子常『看懂了但不会做』吗?巩固题希望紧跟视频出现,还是攒成小练习?"],
+  ["家长能听懂","这是家长自己提的吗?家长想陪着一起听,还是事后自己讲?卡在不会知识点,还是不知道怎么教?"],
+];
+function ivProbe(label){ for(const kv of IV_PROBES){ if(label.indexOf(kv[0])>=0) return kv[1]; } return null; }
+
+function buildInterview(rec, t){
+  const f=rec.f, grade=+f[1];
+  const seg = (grade>=1&&grade<=6)?"小学":(grade>=7&&grade<=9)?"初中":(grade>=10&&grade<=12)?"高中":"";
+  const stu = f[0]==="1";
+  const Y = stu?"你":"您";
+  const rating = ivRating(rec);
+  const lowSat = rating!=null && rating<=3;
+  let h="";
+  const sec=x=>h+='<div class="iv-sec">'+x+'</div>';
+  const q=x=>h+='<div class="iv-q">'+x+'</div>';
+  const p=x=>h+='<div class="iv-p">'+x+'</div>';
+  const note=x=>h+='<div class="iv-note">'+x+'</div>';
+  const probes=labels=>labels.forEach(l=>{ const pr=ivProbe(l); h+='<div class="iv-p"><b>'+esc(l)+'</b>：'+(pr||"能具体展开讲讲吗?")+'</div>'; });
+
+  // 用户开放建议原话
+  let noteTxt="";
+  if(rec.o){ for(const o of rec.o){ if(t.opens[o[0]].kind==="note"){ noteTxt=o[1]; break; } } }
+  // 是否 AI 工具用户
+  const prodSel = ivSel(t, rec, ivFindQ(t,["学习类产品"]));
+  const aiUser = prodSel.some(x=>/AI|Kimi|DeepSeek|GPT|豆包/i.test(x));
+
+  sec("开场");
+  q(stu ? ("嗨，谢谢"+Y+"抽时间！我们想把题目讲解视频做得更好用，听听"+Y+"的真实感受，大概 20 分钟。没有标准答案，觉得不好用就直说，对我们最有用；哪个问题不想答直接跳过。现在方便吗？")
+        : ("您好，我们在了解孩子学习视频讲解的使用体验，想占用您 20 分钟左右，仅用于改进产品、不涉及推销。现在方便吗？"));
+
+  sec("一、基本信息");
+  q("确认一下："+Y+(stu?"是学生本人在用":"是给孩子用")+"，目前"+(seg||"—")+(grade?("（"+esc(t.q2map[f[1]])+"）"):"")+"，对吗？");
+  const sScene=ivSel(t,rec,ivFindQ(t,["场景"]));
+  if(sScene.length) q("看到"+Y+"主要在【"+escList(sScene)+"】用视频——这几种里哪种最常？结合最近一次具体说说？");
+  const sSrc=ivSel(t,rec,ivFindQ(t,["题目来源"]));
+  if(sSrc.length){ const comp=sSrc.some(x=>/竞赛|奥数/.test(x)); q("题目主要来自【"+escList(sSrc)+"】"+(comp?"，其中竞赛/奥数占多少？是学校拔高还是自己在打竞赛？":"，这几类占比大概怎样？")); }
+  q("刚开学、快考试、放假这几个阶段，"+Y+"用视频的多少会不一样吗？");
+
+  // 身份分支
+  if(t.name==="过期会员"){
+    sec("二、之前的使用 & 未续费");
+    q(Y+"之前开会员，主要在什么场景下看视频？帮"+Y+"解决了什么问题？");
+    const sWhy=ivSel(t,rec,ivFindQ(t,["续费"]));
+    if(sWhy.length){ q("后来没续费，"+Y+"选的原因是【"+escList(sWhy)+"】。能挑最主要的那个展开说说吗？"); probes(sWhy); q("如果这个主因被解决，"+Y+"会重新考虑续费吗？需要满足什么条件才会续？"); }
+    const sAlt=ivSel(t,rec,ivFindQ(t,["突出的优势","其他产品"]));
+    if(sAlt.length) q("我们注意到"+Y+"转去用了别的产品，"+Y+"觉得它比我们强在【"+escList(sAlt)+"】——具体是怎么个好法？");
+  } else if(t.name==="非会员"){
+    sec("二、对 VIP 的了解 & 常用产品");
+    q("在今天之前，"+Y+"对会员/VIP 的了解程度是？（清楚有哪些权益／大概知道能看讲解视频／只见过入口不清楚内容／基本没注意过）追问来源与印象。");
+    const sNo=ivSel(t,rec,ivFindQ(t,["从未购买","未购买"]));
+    if(sNo.length){ q(Y+"没买会员的原因选了【"+escList(sNo)+"】，能挑最主要的展开吗？"); }
+    const sOther=ivSel(t,rec,ivFindQ(t,["选择其他产品"]));
+    if(sOther.length) q(Y+"选择其他产品的原因是【"+escList(sOther)+"】，具体怎么个好？");
+  } else {
+    sec("二、会员使用情况");
+    q("最近大概多久用一次视频讲解？集中在作业多/考前，还是分散？最容易触发的是哪类场景？");
+    const sReason=ivSel(t,rec,ivFindQ(t,["原因主要为","看视频讲解的原因"]));
+    if(sReason.length){ const both=sReason.some(x=>/会做/.test(x)); q("视频主要帮"+Y+"解决什么？"+Y+"选了【"+escList(sReason)+"】"+(both?"，尤其『会做题还想看』的，一般是什么样的题？想多学到什么？":"，这几个里哪个最主要？")); }
+  }
+
+  // 满意度分支（会员/过期）
+  if(rating!=null){
+    sec("三、视频满意度（评分 "+rating+"/5）");
+    if(lowSat){
+      note("这块是重点。"+Y+"打分不高，先接一句『这对我们特别有用』，鼓励"+Y+"放开吐槽，别辩解。");
+      if(noteTxt) note("【"+Y+"问卷原话】"+esc(noteTxt)+"　→ 可顺势引出：那"+Y+"理想中的讲解啥样？");
+      const dis=[]; ivFindQs(t,["不满意"]).forEach(qi=>ivSel(t,rec,qi).forEach(l=>{ if(dis.indexOf(l)<0) dis.push(l); }));
+      if(dis.length){ q(Y+"反馈的不满意点：【"+escList(dis)+"】，一条条聊："); probes(dis); }
+      else q("能说说哪儿让"+Y+"不太满意吗？");
+    } else {
+      q("这个分不错！对"+Y+"来说我们做得比较好的点是什么？一条『值得会员看』的视频，还需要做到什么？");
+    }
+    if(aiUser) q('<span class="iv-hl">AI 追问：</span>'+Y+"平时就在用 "+esc(prodSel.filter(x=>/AI|Kimi|DeepSeek|豆包|GPT/i.test(x)).join("、"))+"，那我们的视频相比 AI 直接答题，还有什么不可替代的价值？如果视频是 AI 讲的，"+Y+"打分会区别对待真人和 AI 吗？");
+  }
+
+  // 视频形式偏好
+  const sForm=ivSel(t,rec,ivFindQ(t,["视频讲解形式","视频形式","形式和权益"]));
+  if(sForm.length){ sec("四、想要什么样的视频"); q(Y+"感兴趣的新形式：【"+escList(sForm)+"】，逐个挖："); probes(sForm); }
+  // 学段专项
+  const sPrimary=ivSel(t,rec,ivFindQ(t,["对小学题目"]));
+  if(seg==="小学" && sPrimary.length){ sec("四·小学讲法"); q(Y+"（孩子）希望的讲法：【"+escList(sPrimary)+"】"); probes(sPrimary); }
+  if(seg==="初中"){
+    const sMid=ivSel(t,rec,ivFindQ(t,["对初中视频讲解"]));
+    sec("四·初中专项");
+    if(sMid.length) q(Y+"最看重【"+escList(sMid)+"】。那"+Y+"希望视频怎么平衡『快速解决当前题』和『真正讲透方法』？哪些题短平快、哪些值得讲深？");
+    q("解题大招："+Y+"平时会主动找『秒杀技巧/解题套路』吗？从哪找的？最近有没有一个用了觉得真好用的？");
+    q("内容偏好：除了作业帮，"+Y+"还常看哪些讲题的博主/老师？为啥喜欢？哪点是我们现在缺的？");
+  }
+  if(seg==="高中"){
+    sec("四·高中专项");
+    q(Y+"选科了吗？选了哪几科？哪几科或哪类题型最吃力、最需要视频讲解，为什么？");
+    q("面对高考难题/压轴题，"+Y+"主要靠什么提升（刷题/老师/找大招）？更需要把题讲透，还是给能套用的方法套路、甚至『不会全做也能拿部分分』的策略？");
+  }
+
+  // 会员功能
+  const sFunc=ivSel(t,rec,ivFindQ(t,["视频功能","新功能"]));
+  if(sFunc.length){ sec("五、会员功能 / 权益"); q(Y+"感兴趣的新功能：【"+escList(sFunc)+"】，追使用场景与真实需求："); probes(sFunc); }
+  // 实验
+  const sExp=ivSel(t,rec,ivFindQ(t,["实验"]));
+  if(sExp.length){
+    sec("五·实验专项");
+    q(Y+"在实验这块选了【"+escList(sExp)+"】，需求挺强。"+(seg==="初中"?"你们中考有实验操作考试吗？开始准备了没？平时实验操作怎么学的（学校实验课/看演示/看视频/背步骤）？":"平时实验部分怎么学的？"));
+    q("面对实验，"+Y+"觉得现在最难的是啥？最想要哪种帮助——看老师完整实操录像、自己模拟练一遍、还是把考点和易错步骤讲清楚？给这几个排个序？");
+  }
+
+  sec("收尾");
+  q("如果只能先给"+Y+"改好一件事，让"+Y+"觉得『这会员值了』，最想让我们先搞定哪个？为什么？");
+  q("今天有没有我没问到、但"+Y+"觉得挺重要的？随便说。");
+  return h;
+}
+
 function queryUid(){
   const raw = document.getElementById("uidInput").value.trim();
   const hint = document.getElementById("uidHint");
@@ -557,7 +718,11 @@ function queryUid(){
   hint.textContent = "已找到（"+matches.map(m=>m.t.name).join("、")+"）"; hint.className="uid-hint ok";
   const body = document.getElementById("uidModalBody");
   body.innerHTML = matches.map(m=>
-    '<div class="uid-block"><span class="uid-block-tab">'+esc(m.t.name)+'</span>'+buildDetail(m.r, m.t)+'</div>'
+    '<div class="uid-block"><span class="uid-block-tab">'+esc(m.t.name)+'</span>'+
+    '<div class="uid-cols">'+
+      '<div class="uid-left">'+buildDetail(m.r, m.t)+'</div>'+
+      '<div class="uid-right"><div class="uid-right-title">🗣️ 推荐问题（据其作答定制）</div>'+buildInterview(m.r, m.t)+'</div>'+
+    '</div></div>'
   ).join("");
   document.getElementById("uidModalTitle").textContent = "UID "+raw+" 的作答详情";
   document.getElementById("uidModal").classList.add("show");
