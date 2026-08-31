@@ -593,29 +593,92 @@ function buildSupplierDetail(user){
 }
 
 function buildSupplierInterview(user){
-  const selected = user.answers.flatMap(answer=>answer.options.filter(option=>option.selected).map(option=>option.label));
-  const name = user.identity.Q1 === "学生本人" ? "你" : "您";
-  let h = '<div class="iv-sec">开场</div>';
-  h += '<div class="iv-q">您好，我们想了解'+name+'对学习产品和视频讲解的真实感受，帮助优化产品体验。没有标准答案，方便分享吗？</div>';
-  h += '<div class="iv-sec">一、基本信息</div>';
-  h += '<div class="iv-q">确认一下：'+name+'是'+esc(user.identity.Q1||"—")+'，目前'+esc(user.identity.Q2||"—")+'，学习状态是“'+esc(user.identity.Q3||"—")+'”，对吗？</div>';
-  const questionGroups = [
-    ["视频使用", ["看视频", "视频讲解", "题目来源"]],
-    ["产品体验", ["满意度", "不满意", "满意点"]],
-    ["功能与内容需求", ["新视频", "新功能", "更希望", "视频怎么讲", "实验"]]
-  ];
-  questionGroups.forEach(([section, keywords])=>{
-    const answers = user.answers.filter(answer=>keywords.some(keyword=>answer.title.includes(keyword))).flatMap(answer=>answer.options.filter(option=>option.selected).map(option=>[answer.title, option.label]));
-    if(!answers.length) return;
-    h += '<div class="iv-sec">'+esc(section)+'</div>';
-    answers.forEach(([title,label])=>{ h += '<div class="iv-p"><b>'+esc(label)+'</b>：'+esc('看到您在“'+title.replace(/^Q\\d+\\s*/, '')+'”中选择了此项，能结合最近一次具体使用经历说说吗？')+'</div>'; });
+  const Y = user.identity.Q1 === "学生本人" ? "你" : "您";
+  const selectedFor = keywords => user.answers
+    .filter(answer => keywords.some(keyword => answer.title.includes(keyword)))
+    .flatMap(answer => answer.options.filter(option => option.selected).map(option => option.label));
+  const askProbes = labels => labels.forEach(label => {
+    const probe = ivProbe(label);
+    if (probe) h += '<div class="iv-p"><b>'+esc(label)+'</b>：'+probe+'</div>';
   });
-  const priorities = selected.filter(label=>/不满意|不会|看不懂|搜不到|价格|续费|互动|动画|追问|动态|压轴|字幕|错题/.test(label));
-  if(priorities.length){
-    h += '<div class="iv-sec">重点追问</div>';
-    priorities.slice(0, 5).forEach(label=>{ h += '<div class="iv-p"><b>'+esc(label)+'</b>：这对'+name+'的影响是什么？通常在什么场景发生？理想的解决方式是什么？</div>'; });
+  const hasProduct = label => selectedFor(["学习类产品"]).includes(label);
+  const ratingAnswer = user.answers.find(answer => answer.title.includes("满意度"));
+  const rating = ratingAnswer && ratingAnswer.options.find(option => option.selected);
+  let h = '';
+  const sec = text => h += '<div class="iv-sec">'+text+'</div>';
+  const q = text => h += '<div class="iv-q">'+text+'</div>';
+
+  sec("开场");
+  q(user.identity.Q1 === "学生本人"
+    ? "嗨，谢谢你抽时间！我们想把题目讲解视频做得更好用，听听你的真实感受，大概 20 分钟。没有标准答案，觉得不好用就直说。现在方便吗？"
+    : "您好，我们在了解孩子学习视频讲解的使用体验，想占用您 20 分钟左右，仅用于改进产品、不涉及推销。现在方便吗？");
+
+  sec("一、基本信息");
+  q("确认一下："+Y+"是"+esc(user.identity.Q1||"—")+"，目前"+esc(user.identity.Q2||"—")+"，学习状态是“"+esc(user.identity.Q3||"—")+"”，对吗？");
+  const scenes = selectedFor(["讲解的场景"]);
+  if (scenes.length) q("看到"+Y+"主要在【"+escList(scenes)+"】看视频——这几种里哪种最常？最近一次是遇到了什么题？");
+  const sources = selectedFor(["题目来源"]);
+  if (sources.length) q("题目主要来自【"+escList(sources)+"】。这些来源里，哪一类题最容易需要视频？平时是自己找还是家长帮忙找？");
+
+  if (user.group === "非会员") {
+    sec("二、对 VIP 的了解 & 未购买原因");
+    q("在今天之前，"+Y+"对会员/VIP 的了解程度是？是清楚权益、只知道能看讲解视频，还是基本没注意过？这些信息通常从哪里看到？");
+    const noBuy = selectedFor(["从未购买", "未购买会员"]);
+    if (noBuy.length) {
+      q(Y+"没买会员的原因选了【"+escList(noBuy)+"】。请按影响大小排一下：哪一个是最主要的？");
+      askProbes(noBuy);
+    }
+    const otherProductReasons = selectedFor(["选择其他产品"]);
+    if (otherProductReasons.length) {
+      q("相比作业帮，"+Y+"认为其他产品强在【"+escList(otherProductReasons)+"】。这里面哪一点真正改变了使用习惯？能举一款具体产品和一次使用经历吗？");
+      askProbes(otherProductReasons);
+    }
+    if (hasProduct("线下辅导班")) {
+      sec("三、线下辅导班的替代价值");
+      q("选择线下辅导班主要想解决什么问题？是讲得更细、能随时追问、有人监督，还是学习氛围？");
+      q("线下课通常覆盖哪些学科、题型或学习阶段？作业临时卡住而又没法上课时，"+Y+"现在怎么解决？");
+      q("如果线上能针对错题 1 对 1 追问、配同类题和学习计划，哪些能力足以减少线下课？哪些仍然不能替代？");
+    }
+  } else if (user.group === "过期会员") {
+    sec("二、之前的使用 & 未续费");
+    q(Y+"之前开会员时，主要在什么场景下看视频？它帮"+Y+"解决了什么问题？");
+    const noRenew = selectedFor(["没有续费", "未续费"]);
+    if (noRenew.length) {
+      q("后来没有续费，"+Y+"选的原因是【"+escList(noRenew)+"】。哪一个是决定性原因？");
+      askProbes(noRenew);
+      q("如果这个主因被解决，"+Y+"会重新考虑续费吗？需要满足什么条件才会续？");
+    }
+  } else {
+    sec("二、会员使用情况");
+    const reasons = selectedFor(["看视频讲解的原因"]);
+    if (reasons.length) {
+      q("视频主要帮"+Y+"解决什么？"+Y+"选了【"+escList(reasons)+"】。这几个里哪个最常发生？");
+      askProbes(reasons);
+    }
   }
-  h += '<div class="iv-sec">收尾</div><div class="iv-q">如果只能优先改善一件事，让'+name+'觉得产品更值得使用，最希望先解决什么？为什么？</div>';
+
+  if (rating) {
+    sec("三、视频满意度（评分 "+esc(rating.label)+"）");
+    if (/^[1-3]分$/.test(rating.label)) {
+      q("这个分数不高，最影响体验的是哪一环：题目匹配、讲解准确性、听懂程度，还是视频形式？请按影响大小排一下。");
+      const dissatisfaction = selectedFor(["不满意原因"]);
+      if (dissatisfaction.length) { q(""+Y+"反馈的不满意点有【"+escList(dissatisfaction)+"】，我们一条条聊："); askProbes(dissatisfaction); }
+    } else {
+      q("这个分数不错！对"+Y+"来说，视频做得比较好的点是什么？一条“值得看”的视频还需要做到什么？");
+    }
+  }
+
+  const forms = selectedFor(["视频讲解形式", "视频形式和权益", "新视频讲解形式"]);
+  if (forms.length) { sec("四、想要什么样的视频"); q(Y+"感兴趣的新形式有【"+escList(forms)+"】，逐个聊聊："); askProbes(forms); }
+  const features = selectedFor(["视频功能", "新功能"]);
+  if (features.length) { sec("五、会员功能 / 权益"); q(Y+"感兴趣的新功能有【"+escList(features)+"】。分别会在什么学习场景用？"); askProbes(features); }
+  if (user.group === "非会员") {
+    sec("六、转化条件");
+    q("如果可以先体验一次针对自己错题的视频讲解或互动答疑，"+Y+"愿不愿意试？体验到什么程度会考虑付费？");
+    q("如果只能让作业帮先做好一件事，什么改变会让"+Y+"从“不用会员”变成愿意购买？");
+  }
+  sec("收尾");
+  q("如果只能优先改善一件事，让"+Y+"觉得产品更值得使用，最希望先解决什么？为什么？");
   return h;
 }
 
