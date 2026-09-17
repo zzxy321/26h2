@@ -164,23 +164,29 @@
   .deep-head-title { font-size:15px; font-weight:700; line-height:1.45; }
   .deep-head-meta { margin-top:4px; font-size:12px; color:#86909c; line-height:1.45; }
   .deep-close { border:none; background:#f2f3f5; border-radius:7px; width:28px; height:28px; cursor:pointer; color:#4e5969; font-size:15px; }
-  .deep-body { display:grid; grid-template-columns:minmax(0,1fr) 250px; gap:14px; padding:14px; overflow-y:auto; }
-  .deep-chart-wrap { min-width:0; overflow-x:auto; border:1px solid #f0f0f0; border-radius:10px; padding:14px 12px 8px; background:#fcfcfb; }
-  .deep-chart { min-width:900px; height:500px; display:flex; position:relative; padding:20px 10px 62px 42px; align-items:flex-end; }
+  .deep-body { display:grid; grid-template-columns:minmax(0,1fr) 250px; grid-auto-rows:max-content; align-items:start; gap:14px; padding:14px; overflow-y:auto; }
+  .deep-chart-wrap { min-width:0; overflow-x:hidden; border:1px solid #f0f0f0; border-radius:10px; padding:12px 8px 6px; background:#fcfcfb; }
+  .deep-chart { min-width:0; width:100%; height:500px; display:flex; position:relative; padding:20px 4px 62px 38px; align-items:flex-end; }
   .deep-y-axis { position:absolute; left:8px; top:20px; bottom:58px; width:30px; color:#86909c; font-size:10px; }
   .deep-y-axis::before { content:""; position:absolute; right:0; top:0; bottom:0; border-right:1px solid #c3c2b7; }
   .deep-y-tick { position:absolute; right:6px; transform:translateY(50%); }
-  .deep-y-line { position:absolute; left:42px; right:10px; height:1px; background:#e8e8e4; }
-  .deep-groups { width:100%; height:100%; display:flex; align-items:flex-end; gap:11px; }
-  .deep-group { width:60px; flex:none; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; position:relative; }
-  .deep-group.break-before { margin-left:32px; }
-  .deep-bar { width:34px; height:100%; background:#eef0f3; border-radius:5px 5px 0 0; overflow:hidden; display:flex; flex-direction:column-reverse; justify-content:flex-start; position:relative; }
-  .deep-bar.single { width:34px; }
+  .deep-y-line { position:absolute; left:38px; right:4px; height:1px; background:#e8e8e4; }
+  .deep-groups { width:100%; height:100%; display:flex; align-items:flex-end; gap:4px; }
+  .deep-group { flex:1 1 0; min-width:0; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; position:relative; }
+  .deep-group.break-before { margin-left:10px; }
+  .deep-bar { width:min(34px,72%); min-width:20px; height:100%; background:#eef0f3; border-radius:5px 5px 0 0; overflow:hidden; display:flex; flex-direction:column-reverse; justify-content:flex-start; position:relative; }
+  .deep-bar.single { width:min(34px,72%); }
   .deep-segment { width:100%; border-top:2px solid #fcfcfb; min-height:0; cursor:default; position:relative; display:flex; align-items:center; justify-content:center; }
   .deep-segment:first-child { border-top:none; }
   .deep-segment-label { font-size:9px; font-weight:700; line-height:1; pointer-events:none; text-shadow:0 1px 1px rgba(255,255,255,.18); }
   .deep-rank-label { font-size:8px; font-weight:800; line-height:1; pointer-events:none; text-shadow:0 1px 2px rgba(255,255,255,.28),0 0 1px rgba(0,0,0,.18); }
-  .deep-group-label { position:absolute; top:100%; width:72px; margin-top:8px; text-align:center; font-size:11px; color:#4e5969; line-height:1.25; }
+  .deep-group-label { position:absolute; top:100%; width:100%; margin-top:7px; text-align:center; font-size:10px; color:#4e5969; line-height:1.2; white-space:nowrap; }
+  .deep-only-btn { display:inline-block; margin-top:4px; border:1px solid #c9d8fb; background:#f5f8ff; color:#165dff;
+                   border-radius:5px; padding:1px 6px; font-size:9px; line-height:1.35; cursor:pointer; }
+  .deep-only-btn:hover { background:#e8f0ff; border-color:#165dff; }
+  .deep-only-btn.on { color:#fff; background:#165dff; border-color:#165dff; }
+  .deep-option-btn.deep-reset-slice { display:none; width:100%; justify-content:center; margin-bottom:9px; }
+  .deep-option-btn.deep-reset-slice.show { display:flex; }
   .deep-option-panel { border-left:1px solid #f0f0f0; padding-left:16px; min-width:0; }
   .deep-panel-title { font-size:13px; font-weight:700; margin-bottom:8px; }
   .deep-option-list { display:flex; flex-direction:column; gap:7px; }
@@ -195,6 +201,39 @@
                   border-radius:7px; padding:7px 9px; font-size:11px; line-height:1.45; box-shadow:0 5px 16px rgba(0,0,0,.22); max-width:260px; }
   .deep-tooltip.show { display:block; }
   @media (max-width:780px){ .deep-body{ grid-template-columns:1fr; } .deep-option-panel{ border-left:none; border-top:1px solid #f0f0f0; padding-left:0; padding-top:12px; } }
+  /* ===== 其他学习产品：大类去重覆盖 + 选项选择率 ===== */
+  .product-clusters { --cluster-surface:#fff; --cluster-ink:#1f2329; --cluster-muted:#52514e;
+    --cluster-grid:#e1e0d9; --cluster-option:#2a78d6; --cluster-union:#1baf7a;
+    grid-column:1/-1; min-width:0; color:var(--cluster-ink); background:var(--cluster-surface); }
+  .product-clusters[hidden] { display:none; }
+  .cluster-heading { margin:4px 0 8px; font-size:16px; }
+  .cluster-note { margin:6px 0 12px; font-size:12px; line-height:1.7; color:var(--cluster-muted); }
+  .cluster-legend { display:flex; flex-wrap:wrap; gap:16px; align-items:center; font-size:12px; margin-bottom:14px; }
+  .cluster-legend i { display:inline-block; width:14px; height:12px; margin-right:5px; vertical-align:-2px; border-radius:2px; }
+  .cluster-legend .union-key { background:var(--cluster-union); opacity:.35; }
+  .cluster-legend .option-key { background:var(--cluster-option); }
+  .cluster-panel { margin:12px 0; border:1px solid var(--cluster-grid); border-radius:10px; padding:14px; }
+  .cluster-panel h4 { margin:0 0 8px; font-size:14px; }
+  .cluster-scroll { overflow-x:hidden; }
+  .cluster-svg { display:block; width:100%; height:auto; color:var(--cluster-ink); }
+  .cluster-svg text { fill:currentColor; font-family:inherit; font-size:12px; }
+  .cluster-svg .cluster-axis { fill:var(--cluster-muted); font-size:11px; }
+  .cluster-svg .cluster-grid { stroke:var(--cluster-grid); stroke-width:1; }
+  .cluster-svg .cluster-union { fill:var(--cluster-union); fill-opacity:.25; }
+  .cluster-svg .cluster-option { fill:var(--cluster-option); }
+  .cluster-svg .cluster-hit { cursor:help; outline:none; }
+  .cluster-svg .cluster-hit:hover, .cluster-svg .cluster-hit:focus { filter:brightness(.88); }
+  .cluster-svg .cluster-hit:focus-visible { outline:2px solid var(--cluster-ink); outline-offset:2px; }
+  .cluster-table-toggle { margin-top:6px; font-size:12px; }
+  .cluster-table-toggle summary { cursor:pointer; padding:6px 0; }
+  .cluster-table th, .cluster-table td { color:var(--cluster-ink); padding:7px; border-bottom:1px solid var(--cluster-grid); }
+  .cluster-table td:nth-child(n+3) { font-variant-numeric:tabular-nums; }
+  .cluster-texture { accent-color:var(--cluster-option); }
+  .cluster-jump { margin:10px 0 4px; }
+  @media (prefers-color-scheme:dark) {
+    .product-clusters { --cluster-surface:#1a1a19; --cluster-ink:#fff; --cluster-muted:#c3c2b7;
+      --cluster-grid:#383835; --cluster-option:#3987e5; --cluster-union:#199e70; padding:14px; border-radius:10px; }
+  }
 </style>
 </head>
 <body>
@@ -237,9 +276,11 @@
     <aside class="deep-option-panel">
       <div class="deep-panel-title">选项</div>
       <button class="deep-option-btn deep-all on" id="deepAll">查看全部选项</button>
+      <button class="deep-option-btn deep-reset-slice" id="deepResetSlice">查看全部人群</button>
       <div class="deep-option-list" id="deepOptions"></div>
       <div class="deep-note">默认：各人群内按全部选项的选择次数归一为100%。<br>单选项：彩色为该项选择人数÷该人群有效作答人数，灰色补足100%。</div>
     </aside>
+    <section id="productClusters" class="product-clusters" hidden></section>
   </div>
 </div>
 <div class="deep-tooltip" id="deepTooltip"></div>
@@ -504,6 +545,11 @@ function renderCards(){
       table.appendChild(tr);
     });
     card.appendChild(table);
+    if(q.ck==="其他产品"){
+      const clusterBtn=el("button","deep-btn cluster-jump","产品聚类图 · 整体 + 11 个分人群");
+      clusterBtn.onclick=()=>{ openDeep(curTab,qi); document.getElementById("productClusters").scrollIntoView({block:"start"}); };
+      card.appendChild(clusterBtn);
+    }
     // 该题的“其他补充”手写文本，直接放进本题卡片
     if (fillByQ[qi]){
       fillByQ[qi].forEach(oi=>{
@@ -573,13 +619,25 @@ function canonicalSelections(rec, ref){
   (rec.s||[]).forEach(s=>{ if(s[0]===ref.qi) values.push((ref.q.co||ref.q.options)[s[1]]); });
   return values;
 }
-function deepGroup(label, kind, key, refs, breakBefore){
+function gradeBand(value, key){
+  const bands={low:["1","2","3"],high:["4","5","6"],middle:["7","8","9"],senior:["10","11","12"]};
+  return (bands[key]||[]).includes(value);
+}
+function deepSliceMatch(rec, tabIndex, slice){
+  if(!slice) return true;
+  if(slice.kind==="grade") return gradeBand(rec.f[1],slice.key);
+  if(slice.kind==="level") return rec.f[2]===slice.key;
+  if(slice.kind==="member") return tabIndex===slice.ti;
+  return true;
+}
+function deepGroup(label, kind, key, refs, breakBefore, slice, buttonSlice){
   let denom=0; const selected=[];
   const byTab={}; refs.forEach(ref=>(byTab[ref.ti]=byTab[ref.ti]||[]).push(ref));
   Object.keys(byTab).forEach(ti=>{
-    const tabRefs=byTab[ti], t=tabRefs[0].t;
+    const tabIndex=+ti, tabRefs=byTab[ti], t=tabRefs[0].t;
     t.records.filter(r=>equivalentFilter(r,t)).forEach(r=>{
-      const match = kind==="all" || (kind==="grade" && key(r.f[1])) || (kind==="level" && r.f[2]===key);
+      if(!deepSliceMatch(r,tabIndex,slice)) return;
+      const match = kind==="all" || (kind==="grade" && gradeBand(r.f[1],key)) || (kind==="level" && r.f[2]===key);
       if(!match) return;
       const shownRefs=tabRefs.filter(ref=>(r.sh||[]).indexOf(ref.qi)>=0);
       if(!shownRefs.length) return;
@@ -588,28 +646,36 @@ function deepGroup(label, kind, key, refs, breakBefore){
     });
   });
   const counts={}; selected.forEach(v=>counts[v]=(counts[v]||0)+1);
-  return {label:label,denom:denom,counts:counts,totalSelections:selected.length,breakBefore:!!breakBefore};
+  return {label:label,denom:denom,counts:counts,totalSelections:selected.length,breakBefore:!!breakBefore,buttonSlice:buttonSlice||null};
 }
-function buildDeepData(tabIndex, qi){
+function buildDeepData(tabIndex, qi, slice){
   const refs=deepQuestionRefs(tabIndex,qi), srcQ=TABS[tabIndex].questions[qi];
   const options=[]; refs.forEach(ref=>(ref.q.co||ref.q.options).forEach(o=>{if(!options.includes(o))options.push(o);}));
-  const groups=[
-    deepGroup("小低","grade",v=>["1","2","3"].includes(v),refs,false),
-    deepGroup("小高","grade",v=>["4","5","6"].includes(v),refs,false),
-    deepGroup("初中","grade",v=>["7","8","9"].includes(v),refs,false),
-    deepGroup("高中","grade",v=>["10","11","12"].includes(v),refs,false)
+  const gradeDefs=[
+    {label:"小低",key:"low"},{label:"小高",key:"high"},{label:"初中",key:"middle"},{label:"高中",key:"senior"}
+  ];
+  const levelDefs=[
+    {label:"拔尖",key:"1"},{label:"中上",key:"2"},{label:"中等",key:"3"},{label:"薄弱",key:"4"}
   ];
   const refsByTab={}; refs.forEach(ref=>(refsByTab[ref.ti]=refsByTab[ref.ti]||[]).push(ref));
   const tabGroups=Object.keys(refsByTab).map(ti=>refsByTab[ti]);
+  const groups=[];
+  if(tabGroups.length>1) groups.push(deepGroup((slice?"当前·":"")+"整体","all",null,refs,false,slice,null));
+  gradeDefs.forEach((g,i)=>{
+    if(slice && slice.kind==="grade" && slice.key!==g.key) return;
+    groups.push(deepGroup((slice?"当前·":"")+g.label,"grade",g.key,refs,tabGroups.length>1&&i===0,slice,{kind:"grade",key:g.key,label:g.label}));
+  });
   if(tabGroups.length>1){
-    tabGroups.forEach((tabRefs,i)=>groups.push(deepGroup(tabRefs[0].t.name,"all",null,tabRefs,i===0)));
+    tabGroups.forEach((tabRefs,i)=>{
+      const ti=tabRefs[0].ti;
+      if(slice && slice.kind==="member" && slice.ti!==ti) return;
+      groups.push(deepGroup((slice?"当前·":"")+tabRefs[0].t.name,"all",null,tabRefs,i===0,slice,{kind:"member",ti:ti,label:tabRefs[0].t.name}));
+    });
   }
-  groups.push(
-    deepGroup("拔尖","level","1",refs,true),
-    deepGroup("中上","level","2",refs,false),
-    deepGroup("中等","level","3",refs,false),
-    deepGroup("薄弱","level","4",refs,false)
-  );
+  levelDefs.forEach((g,i)=>{
+    if(slice && slice.kind==="level" && slice.key!==g.key) return;
+    groups.push(deepGroup((slice?"当前·":"")+g.label,"level",g.key,refs,true&&i===0,slice,{kind:"level",key:g.key,label:g.label}));
+  });
   return {title:srcQ.title,ck:srcQ.ck,options:options,groups:groups,refs:refs};
 }
 function deepTooltipShow(e,html){
@@ -619,6 +685,16 @@ function deepTooltipShow(e,html){
   tip.style.top=Math.min(window.innerHeight-h-pad,e.clientY+12)+"px";
 }
 function deepTooltipHide(){ document.getElementById("deepTooltip").classList.remove("show"); }
+function sameDeepSlice(a,b){
+  if(!a || !b || a.kind!==b.kind) return false;
+  return a.kind==="member"?a.ti===b.ti:a.key===b.key;
+}
+function setDeepSlice(slice){
+  if(!deepState) return;
+  deepState.slice=sameDeepSlice(deepState.slice,slice)?null:slice;
+  deepState.data=buildDeepData(deepState.tabIndex,deepState.qi,deepState.slice);
+  renderDeep();
+}
 function renderDeep(){
   if(!deepState) return;
   const data=deepState.data, selected=deepState.selected;
@@ -647,24 +723,183 @@ function renderDeep(){
       gray.onmousemove=e=>deepTooltipShow(e,"<b>"+esc(g.label)+" · "+esc(o)+"</b><br>未选择："+Math.max(0,g.denom-count)+" / "+g.denom);gray.onmouseleave=deepTooltipHide;
       bar.appendChild(color);bar.appendChild(gray);
     }
-    wrap.appendChild(bar);wrap.appendChild(el("div","deep-group-label",g.label));groups.appendChild(wrap);
+    wrap.appendChild(bar);
+    const label=el("div","deep-group-label");
+    label.appendChild(document.createTextNode(g.label));
+    if(g.buttonSlice){
+      const only=el("button","deep-only-btn"+(sameDeepSlice(deepState.slice,g.buttonSlice)?" on":""),sameDeepSlice(deepState.slice,g.buttonSlice)?"已只看":"只看");
+      only.title="其他维度只看“"+g.buttonSlice.label+"”人群";
+      only.onclick=e=>{e.stopPropagation();setDeepSlice(g.buttonSlice);};
+      label.appendChild(el("br"));label.appendChild(only);
+    }
+    wrap.appendChild(label);groups.appendChild(wrap);
   });
   chart.appendChild(groups);
+  const reset=document.getElementById("deepResetSlice");
+  reset.classList.toggle("show",!!deepState.slice);
+  reset.textContent=deepState.slice?"取消只看："+deepState.slice.label:"查看全部人群";
   document.getElementById("deepAll").classList.toggle("on",selected==null);
   [...document.querySelectorAll(".deep-option-btn[data-oi]")].forEach(b=>b.classList.toggle("on",+b.dataset.oi===selected));
-  document.getElementById("deepMeta").textContent=(selected==null?"默认：选项选择次数构成（每柱合计100%）":"单选项：选择人数 / 该人群有效作答人数")+" · 当前筛选条件生效";
+  const sliceText=deepState.slice?" · 只看“"+deepState.slice.label+"”人群":"";
+  document.getElementById("deepMeta").textContent=(selected==null?"默认：选项选择次数构成（每柱合计100%）":"单选项：选择人数 / 该人群有效作答人数")+sliceText+" · 当前筛选条件生效";
+  renderProductClusters(data);
 }
 function openDeep(tabIndex,qi){
-  const data=buildDeepData(tabIndex,qi); deepState={tabIndex:tabIndex,qi:qi,data:data,selected:null};
+  const data=buildDeepData(tabIndex,qi); deepState={tabIndex:tabIndex,qi:qi,data:data,selected:null,slice:null};
   document.getElementById("deepTitle").textContent=data.title;
   const list=document.getElementById("deepOptions"); list.innerHTML="";
   data.options.forEach((o,i)=>{ const b=el("button","deep-option-btn");b.dataset.oi=String(i); const sw=el("span","deep-swatch");Object.assign(sw.style,deepOptionStyle(i));b.appendChild(sw);b.appendChild(document.createTextNode(o));b.onclick=()=>{deepState.selected=deepState.selected===i?null:i;renderDeep();};list.appendChild(b); });
   document.getElementById("deepModalBg").classList.add("show");document.getElementById("deepModal").classList.add("show");renderDeep();
+  document.querySelector(".deep-body").scrollTop=0;
+}
+// 聚类统计独立于原有的选择次数构成图；同一用户选择两个子项只计一次大类覆盖。
+function productCategory(option){
+  if(["作业帮学习机","其他学习机/平板类产品"].includes(option)) return "学习机";
+  if(["豆包/豆包爱学","Kimi/DeepSeek/其他AI工具"].includes(option)) return "AI";
+  return option;
+}
+function buildProductClusters(data){
+  const definitions=new Map();
+  data.options.forEach(option=>{
+    const category=productCategory(option);
+    if(!definitions.has(category)) definitions.set(category,[]);
+    definitions.get(category).push(option);
+  });
+  const activeSlice=deepState&&deepState.slice;
+  const refsByTab=new Map();data.refs.forEach(ref=>refsByTab.set(ref.ti,ref));
+  const cohorts=[
+    {label:"整体",slice:null},
+    ...[["小低","low"],["小高","high"],["初中","middle"],["高中","senior"]].map(([label,key])=>({label:label,slice:{kind:"grade",key:key}})),
+    ...[...refsByTab].map(([ti,ref])=>({label:ref.t.name,slice:{kind:"member",ti:ti}})),
+    ...["拔尖","中上","中等","薄弱"].map((label,i)=>({label:label,slice:{kind:"level",key:String(i+1)}}))
+  ];
+  return cohorts.map(cohort=>{
+    const users=new Map();
+    data.refs.forEach(ref=>ref.t.records.forEach((rec,ri)=>{
+      if(!equivalentFilter(rec,ref.t) || !deepSliceMatch(rec,ref.ti,activeSlice) || !deepSliceMatch(rec,ref.ti,cohort.slice) || !(rec.sh||[]).includes(ref.qi)) return;
+      const uid=String(rec.u==null?"":rec.u).trim(), key=uid?"uid:"+uid:"row:"+ref.ti+":"+ri;
+      if(!users.has(key)) users.set(key,{selected:new Set(),offered:new Set()});
+      const user=users.get(key);
+      canonicalSelections(rec,ref).forEach(option=>user.selected.add(option));
+      (ref.q.co||ref.q.options).forEach(option=>user.offered.add(option));
+    }));
+    const denom=users.size, people=[...users.values()];
+    const categories=[...definitions].map(([label,options],index)=>{
+      const children=options.map((option,oi)=>({label:option,index:oi,
+        count:people.filter(u=>u.selected.has(option)).length,
+        offered:people.filter(u=>u.offered.has(option)).length
+      })).sort((a,b)=>b.count-a.count||a.index-b.index);
+      return {label:label,index:index,children:children,
+        count:people.filter(u=>options.some(o=>u.selected.has(o))).length,
+        offered:people.filter(u=>options.some(o=>u.offered.has(o))).length};
+    }).sort((a,b)=>b.count-a.count||a.index-b.index);
+    return {label:cohort.label,denom:denom,categories:categories};
+  });
+}
+function clusterSvg(tag,attrs,text){
+  const node=document.createElementNS("http://www.w3.org/2000/svg",tag);
+  Object.entries(attrs||{}).forEach(([key,value])=>node.setAttribute(key,String(value)));
+  if(text!=null) node.textContent=text;
+  return node;
+}
+function clusterPercent(count,denom){ return denom?(count/denom*100).toFixed(1)+"%":"—"; }
+function clusterStatus(item,denom){
+  if(!denom) return "无有效样本";
+  if(!item.offered) return "问卷未提供";
+  return item.offered<denom?"部分问卷提供（"+item.offered+"人）":"全部问卷提供";
+}
+function clusterTooltip(mark,group,item,kind){
+  const text=group.label+" · "+item.label+"（"+kind+"）\n选择人数："+item.count+" / "+group.denom+
+    "\n用户占比："+(item.offered?clusterPercent(item.count,group.denom):"—")+"\n"+clusterStatus(item,group.denom);
+  mark.setAttribute("tabindex","0"); mark.setAttribute("role","img"); mark.setAttribute("aria-label",text);
+  mark.appendChild(clusterSvg("title",{},text));
+  const show=e=>deepTooltipShow(e,esc(text).replace(/\n/g,"<br>"));
+  mark.onmousemove=show; mark.onmouseleave=deepTooltipHide;
+  mark.onfocus=()=>{const r=mark.getBoundingClientRect();show({clientX:r.left+r.width/2,clientY:r.top});};
+  mark.onblur=deepTooltipHide;
+}
+function clusterLines(svg,text,x,y,maxChars,cls){
+  const label=clusterSvg("text",{x:x,y:y,"text-anchor":"middle",class:cls||""});
+  const lines=text.split("\n").flatMap(line=>line.match(new RegExp(".{1,"+maxChars+"}","gu"))||[line]);
+  lines.forEach((line,i)=>label.appendChild(clusterSvg("tspan",{x:x,dy:i?16:0},line)));
+  svg.appendChild(label);
+}
+function renderClusterPanel(group,index,texture){
+  const panel=el("article","cluster-panel"), heading=el("h4",null,group.label+" · 有效作答用户 n="+group.denom);
+  panel.appendChild(heading);
+  if(!group.denom){ panel.appendChild(el("p","cluster-note","当前筛选下无有效样本，不能计算占比。")); return panel; }
+  const scroll=el("div","cluster-scroll"), width=1160, height=450, left=48, top=38, bottom=300;
+  const plotHeight=bottom-top, slot=(width-left-12)/group.categories.length;
+  const svg=clusterSvg("svg",{viewBox:"0 0 "+width+" "+height,class:"cluster-svg",role:"group","aria-label":group.label+"产品聚类用户占比，纵轴0至100%"});
+  const defs=clusterSvg("defs"), pattern=clusterSvg("pattern",{id:"cluster-hatch-"+index,width:8,height:8,patternUnits:"userSpaceOnUse",patternTransform:"rotate(45)"});
+  pattern.appendChild(clusterSvg("rect",{width:8,height:8,fill:"var(--cluster-option)"}));
+  pattern.appendChild(clusterSvg("line",{x1:0,y1:0,x2:0,y2:8,stroke:"var(--cluster-surface)","stroke-width":2}));
+  defs.appendChild(pattern);svg.appendChild(defs);
+  [0,20,40,60,80,100].forEach(value=>{
+    const y=bottom-value/100*plotHeight;
+    svg.appendChild(clusterSvg("line",{x1:left,y1:y,x2:width-12,y2:y,class:"cluster-grid"}));
+    svg.appendChild(clusterSvg("text",{x:left-8,y:y+4,"text-anchor":"end",class:"cluster-axis"},value+"%"));
+  });
+  group.categories.forEach((category,ci)=>{
+    const x=left+ci*slot+10, w=slot-20, unionHeight=category.count/group.denom*plotHeight, y=bottom-unionHeight;
+    const outer=clusterSvg("g",{class:"cluster-hit"});
+    outer.appendChild(clusterSvg("rect",{x:x,y:y,width:w,height:unionHeight,rx:4,class:"cluster-union"}));
+    outer.appendChild(clusterSvg("rect",{x:x,y:Math.min(y,bottom-24),width:w,height:Math.max(unionHeight,24),fill:"transparent"}));
+    clusterTooltip(outer,group,category,"大类去重覆盖");svg.appendChild(outer);
+    svg.appendChild(clusterSvg("text",{x:x+w/2,y:y-10,"text-anchor":"middle","font-weight":700},category.offered?clusterPercent(category.count,group.denom):"未提供"));
+    category.children.forEach((child,oi)=>{
+      const cx=x+w*(oi+.5)/category.children.length, h=child.count/group.denom*plotHeight, cy=bottom-h;
+      const mark=clusterSvg("g",{class:"cluster-hit"});
+      const bar=clusterSvg("rect",{x:cx-12,y:cy,width:24,height:h,rx:4,class:"cluster-option"});
+      if(texture) bar.style.fill="url(#cluster-hatch-"+index+")";
+      mark.appendChild(bar);
+      mark.appendChild(clusterSvg("rect",{x:cx-14,y:Math.min(cy,bottom-24),width:28,height:Math.max(h,24),fill:"transparent"}));
+      clusterTooltip(mark,group,child,"选项选择率");svg.appendChild(mark);
+      if(category.children.length>1){
+        // 与大类顶部相近时下移，避免相同或接近的占比标签重叠。
+        const labelY=cy-y<28 && h>=32?cy+18:cy-7;
+        const label=clusterSvg("text",{x:cx,y:labelY,"text-anchor":"middle"},child.offered?clusterPercent(child.count,group.denom):"—");
+        label.style.paintOrder="stroke";label.style.stroke="var(--cluster-surface)";label.style.strokeWidth="3px";
+        svg.appendChild(label);
+        const short={"作业帮学习机":"作业帮\n学习机", "其他学习机/平板类产品":"其他学习机\n/平板", "豆包/豆包爱学":"豆包/\n豆包爱学", "Kimi/DeepSeek/其他AI工具":"Kimi/\nDeepSeek/\n其他AI"};
+        clusterLines(svg,short[child.label]||child.label,cx,bottom+20,10,"cluster-axis");
+      }
+    });
+    clusterLines(svg,category.label,x+w/2,bottom+94,10,"");
+  });
+  scroll.appendChild(svg);panel.appendChild(scroll);
+  const details=el("details","cluster-table-toggle"), summary=el("summary",null,"查看人数与占比明细");details.appendChild(summary);
+  const table=el("table","cluster-table"), tr=el("tr");
+  ["大类","统计项","人数","用户占比","选项可用情况"].forEach(s=>tr.appendChild(el("th",null,s)));table.appendChild(tr);
+  group.categories.forEach(category=>{
+    [{...category,label:"大类任一项（去重）"},...category.children].forEach(item=>{
+      const row=el("tr");
+      [category.label,item.label,item.offered?String(item.count):"—",item.offered?clusterPercent(item.count,group.denom):"—",clusterStatus(item,group.denom)].forEach(s=>row.appendChild(el("td",null,s)));
+      table.appendChild(row);
+    });
+  });
+  const tableScroll=el("div","cluster-scroll");tableScroll.appendChild(table);details.appendChild(tableScroll);panel.appendChild(details);
+  return panel;
+}
+function renderProductClusters(data){
+  const box=document.getElementById("productClusters"); box.replaceChildren();box.hidden=data.ck!=="其他产品";
+  if(box.hidden) return;
+  box.appendChild(el("h3","cluster-heading","其他学习产品 · 大类覆盖与选项选择率"));
+  box.appendChild(el("p","cluster-note","整体汇总三类会员问卷，跟随当前筛选。外层色块 = 选择该大类任一项的去重用户占比；内层柱 = 选择具体选项的用户占比。二者均除以本图有效作答用户数，不是类内占比；多选不可相加。大类及类内选项均按占比降序排列，纵轴统一为 0–100%。"));
+  box.appendChild(el("p","cluster-note","学习机 = 作业帮学习机 + 其他学习机/平板类产品；AI = 豆包/豆包爱学 + Kimi/DeepSeek/其他AI工具；其余选项单列。过期会员题干为“替代作业帮app”，且未提供“作业帮app”；“无”仅向过期会员提供。未提供不代表无人选择，跨问卷比较需谨慎。UID 跨问卷去重、选择取并集；缺失 UID 按独立记录计。11 个人群属于学段、会员身份、学习水平三个维度，不能相加。"));
+  const legend=el("div","cluster-legend");
+  [["union-key","外层：大类去重覆盖"],["option-key","内层：具体选项选择率"]].forEach(([cls,text])=>{const item=el("span");item.appendChild(el("i",cls));item.appendChild(document.createTextNode(text));legend.appendChild(item);});
+  const toggle=el("label"), checkbox=el("input","cluster-texture"); checkbox.type="checkbox";
+  toggle.appendChild(checkbox);toggle.appendChild(document.createTextNode("纹理模式（黑白打印 / 无障碍）"));legend.appendChild(toggle);box.appendChild(legend);
+  const panels=el("div"), groups=buildProductClusters(data);box.appendChild(panels);
+  const draw=()=>{deepTooltipHide();panels.replaceChildren(...groups.map((g,i)=>renderClusterPanel(g,i,checkbox.checked)));};
+  checkbox.onchange=draw;draw();
 }
 function closeDeep(){ document.getElementById("deepModalBg").classList.remove("show"); document.getElementById("deepModal").classList.remove("show"); deepTooltipHide(); deepState=null; }
 document.getElementById("deepClose").onclick=closeDeep;
 document.getElementById("deepModalBg").onclick=closeDeep;
 document.getElementById("deepAll").onclick=()=>{ if(deepState){deepState.selected=null;renderDeep();} };
+document.getElementById("deepResetSlice").onclick=()=>{ if(deepState&&deepState.slice)setDeepSlice(deepState.slice); };
 
 // 生成可滚动评论框；list=[{txt,rec}]
 function commentBox(list){
